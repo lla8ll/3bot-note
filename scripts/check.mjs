@@ -97,7 +97,7 @@ if (manifest) {
   }
 }
 
-for (const file of ['service-worker.js', 'cloud-sync.js', 'server.mjs', 'api/summarize.js', 'src/summarize-handler.mjs']) {
+for (const file of ['service-worker.js', 'cloud-sync.js', 'local-server.mjs', 'api/summarize.js', 'src/summarize-handler.mjs']) {
   const result = spawnSync(process.execPath, ['--check', join(ROOT, file)], { encoding: 'utf8' });
   if (result.status !== 0) fail(`${file} يحتوي خطأ JavaScript: ${(result.stderr || '').trim()}`);
 }

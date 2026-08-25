@@ -5,8 +5,7 @@
   "description": "تطبيق ملاحظات عربي تقدمي مع تلخيص آمن عبر OpenAI API.",
   "type": "module",
   "scripts": {
-    "dev": "node --env-file=.env.local --watch server.mjs",
-    "start": "node server.mjs",
+    "dev": "node --env-file=.env.local --watch local-server.mjs",
     "check": "node scripts/check.mjs",
     "test": "node --test",
     "verify": "pnpm run check && pnpm test"

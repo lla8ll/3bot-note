@@ -1,3 +1,4 @@
+// خادم التطوير المحلي فقط؛ الاسم يتجنب اكتشافه كخادم إنتاج تلقائيًا في Vercel.
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
 import { dirname, extname, resolve, sep } from 'node:path';
