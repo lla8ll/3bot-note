@@ -62,6 +62,9 @@ try {
 }
 
 if (vercelConfig) {
+  if (vercelConfig.framework !== null) {
+    fail('إعداد Vercel يجب أن يستخدم Framework Preset من نوع Other.');
+  }
   if (vercelConfig.functions?.['api/summarize.js']?.maxDuration < 35) {
     fail('مهلة Vercel يجب أن تترك وقتًا لإرجاع استجابة بعد مهلة OpenAI.');
   }
