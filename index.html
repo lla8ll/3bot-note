@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dyoth</title>
+<meta name="description" content="Dyoth — تطبيق ملاحظات عربي تقدمي مع تلخيص آمن بالذكاء الاصطناعي.">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<meta name="theme-color" content="#f2f2f7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dyoth">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+  :root {
+    --bg: #f2f2f7;
+    --window: #ffffff;
+    --sidebar: #f7f7f8;
+    --border: #dddddf;
+    --text: #1c1c1e;
+    --muted: #6e6e73;
+    --muted2: #9a9aa0;
+    --active: #ffe8a3;
+    --hover: #eeeeef;
+    --primary: #ffcc00;
+    --primary-dark: #bf8f00;
+    --danger: #ff3b30;
+    --shadow: rgba(0,0,0,0.10);
+    --input: #ffffff;
+  }
+
+  body.dark {
+    --bg: #1c1c1e;
+    --window: #2c2c2e;
+    --sidebar: #242426;
+    --border: #3a3a3c;
+    --text: #f5f5f7;
+    --muted: #c7c7cc;
+    --muted2: #8e8e93;
+    --active: #5a4515;
+    --hover: #363638;
+    --primary: #ffd60a;
+    --primary-dark: #c9a20a;
+    --danger: #ff453a;
+    --shadow: rgba(0,0,0,0.35);
+    --input: #2c2c2e;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    min-height: 100vh;
+    padding: 24px;
+    transition: background .2s ease, color .2s ease;
+  }
+
+  .app {
+    display: grid;
+    grid-template-columns: 290px 330px 1fr;
+    width: min(1420px, 100%);
+    height: calc(100vh - 48px);
+    margin: 0 auto;
+    background: var(--window);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    box-shadow: 0 12px 38px var(--shadow);
+    overflow: hidden;
+  }
+
+  .folders, .notes-panel {
+    background: var(--sidebar);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .toolbar {
+    padding: 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .toolbar h2 {
+    font-size: 20px;
+    margin: 0;
+    flex: 1;
+  }
+
+  button, .file-label {
+    border: 0;
+    border-radius: 11px;
+    background: var(--primary);
+    color: #241b00;
+    cursor: pointer;
+    padding: 9px 12px;
+    font-weight: 700;
+    font-size: 14px;
+    transition: transform .12s ease, opacity .12s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  button:hover, .file-label:hover { opacity: .86; }
+  button:active, .file-label:active { transform: scale(.98); }
+  button.secondary, .file-label.secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  button.danger { background: transparent; color: var(--danger); border: 1px solid var(--border); }
+
+  .search-box {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  input, textarea, select {
+    font: inherit;
+    color: var(--text);
+    background: var(--input);
+  }
+
+  .search-box input, .folder-input, .tag-input, .note-title {
+    width: 100%;
+    border: 1px solid var(--border);
+    outline: 0;
+    border-radius: 12px;
+    padding: 11px 13px;
+  }
+
+  .folder-list, .note-list {
+    overflow: auto;
+    padding: 10px;
+    flex: 1;
+  }
+
+  .folder-item, .note-card {
+    border-radius: 14px;
+    padding: 12px;
+    cursor: pointer;
+    margin-bottom: 6px;
+    position: relative;
+  }
+
+  .folder-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--text);
+  }
+
+  .folder-item.active, .note-card.active { background: var(--active); }
+  .folder-item:hover, .note-card:hover { background: var(--hover); }
+
+  .folder-count {
+    margin-right: auto;
+    color: var(--muted2);
+    font-size: 12px;
+  }
+
+  .folder-actions {
+    padding: 14px 16px;
+    border-top: 1px solid var(--border);
+    display: grid;
+    gap: 8px;
+  }
+
+  .note-card h3 {
+    font-size: 16px;
+    margin: 0 0 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .note-card p {
+    font-size: 13px;
+    margin: 0 0 6px;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .note-card small {
+    color: var(--muted2);
+    font-size: 11px;
+  }
+
+  .pin {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    color: var(--primary-dark);
+  }
+
+  .editor {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--window);
+  }
+
+  .editor-top {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .editor-body {
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .editorBody {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+  }
+
+  .ai-summary {
+    margin: 0 22px 22px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--sidebar);
+    color: var(--text);
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+
+  .ai-summary[hidden] { display: none; }
+
+  .ai-summary strong {
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .note-title {
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    font-size: 30px;
+    font-weight: 800;
+    padding: 10px 0 12px;
+  }
+
+  .note-meta {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .tag-input, .folder-select {
+    max-width: 220px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+
+  .note-body {
+    flex: 1;
+    min-height: 260px;
+    border: 0;
+    outline: 0;
+    resize: none;
+    line-height: 1.8;
+    font-size: 17px;
+    background: transparent;
+    color: var(--text);
+  }
+
+  .empty {
+    height: 100%;
+    display: grid;
+    place-items: center;
+    text-align: center;
+    color: var(--muted);
+    padding: 24px;
+    font-size: 18px;
+  }
+
+  input[type=file] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .file-label:focus-within {
+    outline: 3px solid var(--primary-dark);
+    outline-offset: 2px;
+  }
+
+  .sync-panel {
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .sync-panel code {
+    direction: ltr;
+    unicode-bidi: plaintext;
+  }
+
+  @media (max-width: 980px) {
+    body { padding: 0; }
+    .app {
+      height: 100vh;
+      border-radius: 0;
+      grid-template-columns: 1fr;
+    }
+    .folders, .notes-panel, .editor {
+      display: none;
+      border-left: 0;
+    }
+    .app[data-mobile-view="folders"] .folders,
+    .app[data-mobile-view="notes"] .notes-panel,
+    .app[data-mobile-view="editor"] .editor {
+      display: flex;
+    }
+    .mobile-only { display: inline-flex !important; }
+  }
+
+  @media (min-width: 981px) {
+    .mobile-only { display: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app" data-mobile-view="folders">
+  <aside class="folders">
+    <div class="toolbar">
+      <h2>المجلدات</h2>
+      <button class="secondary" id="themeBtn">🌙</button>
+    </div>
+    <div class="folder-list" id="folderList"></div>
+    <div class="folder-actions">
+      <input class="folder-input" id="newFolderName" placeholder="اسم مجلد جديد">
+      <button id="addFolderBtn">📁 إضافة مجلد</button>
+      <button class="secondary mobile-only" data-go="notes">عرض الملاحظات</button>
+    </div>
+    <div class="sync-panel">
+      <b>المزامنة السحابية:</b><br>
+      جاهزة هيكليًا عبر <code>cloud-sync.js</code>. ضع مفاتيح Firebase أو Supabase لتفعيلها.
+    </div>
+  </aside>
+
+  <section class="notes-panel">
+    <div class="toolbar">
+      <button class="secondary mobile-only" data-go="folders">المجلدات</button>
+      <h2>الملاحظات</h2>
+      <button id="newNoteBtn">＋ جديدة</button>
+    </div>
+    <div class="search-box">
+      <input id="searchInput" placeholder="بحث في العنوان أو النص أو التصنيفات...">
+    </div>
+    <div class="note-list" id="noteList"></div>
+  </section>
+
+  <main class="editor" id="editor">
+    <div class="editor-top">
+      <button class="secondary mobile-only" data-go="notes">الملاحظات</button>
+      <button id="pinBtn" class="secondary">⭐ تثبيت</button>
+      <button id="summarizeBtn" class="secondary">✨ تلخيص</button>
+      <button id="exportJsonBtn" class="secondary">📤 JSON</button>
+      <button id="exportMdBtn" class="secondary">📤 Markdown</button>
+      <label class="file-label secondary">📥 استيراد JSON<input type="file" id="importJsonInput" accept=".json,application/json"></label>
+      <label class="file-label secondary">📥 استيراد MD<input type="file" id="importMdInput" accept=".md,.markdown,text/markdown,text/plain"></label>
+      <button id="deleteBtn" class="danger">حذف</button>
+    </div>
+    <div class="editorBody" id="editorBody">
+      <div class="empty">حدد ملاحظة أو أنشئ ملاحظة جديدة.</div>
+    </div>
+    <section class="ai-summary" id="aiSummary" aria-live="polite" hidden></section>
+  </main>
+</div>
+
+<script src="cloud-sync.js"></script>
+<script>
+const STORAGE_KEY = 'dyoth.v2';
+const LEGACY_STORAGE_KEY = ['not', 'book.v2'].join('');
+const app = document.getElementById('app');
+const folderList = document.getElementById('folderList');
+const noteList = document.getElementById('noteList');
+const editorBody = document.getElementById('editorBody');
+const searchInput = document.getElementById('searchInput');
+const aiSummary = document.getElementById('aiSummary');
+const summarizeBtn = document.getElementById('summarizeBtn');
+const MAX_SUMMARY_CHARS = 12_000;
+
+function defaultState() {
+  return {
+    folders: [
+      { id: 'all', name: 'كل الملاحظات', system: true },
+      { id: 'default', name: 'ملاحظاتي', system: true }
+    ],
+    notes: [],
+    activeFolderId: 'all',
+    activeNoteId: null,
+    dark: false
+  };
+}
+
+function makeId(prefix) {
+  const suffix = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return `${prefix}-${suffix}`;
+}
+
+function validDate(value, fallback) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? fallback : date.toISOString();
+}
+
+function normalizeState(value) {
+  const base = defaultState();
+  if (!value || typeof value !== 'object') return base;
+
+  const folders = base.folders.slice();
+  const folderIds = new Set(folders.map(folder => folder.id));
+  const sourceFolders = Array.isArray(value.folders) ? value.folders : [];
+
+  sourceFolders.slice(0, 500).forEach(folder => {
+    if (!folder || typeof folder !== 'object') return;
+    const name = typeof folder.name === 'string' ? folder.name.trim().slice(0, 80) : '';
+    if (!name) return;
+    let id = typeof folder.id === 'string' && /^[\w:.-]{1,120}$/u.test(folder.id)
+      ? folder.id
+      : makeId('f');
+    if (id === 'all' || id === 'default' || folderIds.has(id)) return;
+    folderIds.add(id);
+    folders.push({ id, name, system: false });
+  });
+
+  const now = new Date().toISOString();
+  const sourceNotes = Array.isArray(value.notes) ? value.notes : [];
+  const noteIds = new Set();
+  const notes = sourceNotes.slice(0, 5000).flatMap(note => {
+    if (!note || typeof note !== 'object') return [];
+    const folderId = typeof note.folderId === 'string' && folderIds.has(note.folderId) && note.folderId !== 'all'
+      ? note.folderId
+      : 'default';
+    const tags = Array.isArray(note.tags)
+      ? note.tags.filter(tag => typeof tag === 'string').map(tag => tag.trim().slice(0, 40)).filter(Boolean).slice(0, 30)
+      : [];
+    let id = typeof note.id === 'string' && /^[\w:.-]{1,160}$/u.test(note.id) && !noteIds.has(note.id)
+      ? note.id
+      : makeId('n');
+    while (noteIds.has(id)) id = makeId('n');
+    noteIds.add(id);
+    return [{
+      id,
+      title: typeof note.title === 'string' ? note.title.slice(0, 500) : '',
+      body: typeof note.body === 'string' ? note.body.slice(0, 200000) : '',
+      folderId,
+      tags,
+      pinned: note.pinned === true,
+      createdAt: validDate(note.createdAt, now),
+      updatedAt: validDate(note.updatedAt, now)
+    }];
+  });
+
+  const activeFolderId = typeof value.activeFolderId === 'string' && folderIds.has(value.activeFolderId)
+    ? value.activeFolderId
+    : 'all';
+  const activeNoteId = notes.some(note => note.id === value.activeNoteId) ? value.activeNoteId : null;
+
+  return { folders, notes, activeFolderId, activeNoteId, dark: value.dark === true };
+}
+
+function loadState() {
+  for (const key of [STORAGE_KEY, LEGACY_STORAGE_KEY]) {
+    const saved = localStorage.getItem(key);
+    if (!saved) continue;
+    try {
+      const normalized = normalizeState(JSON.parse(saved));
+      if (key === LEGACY_STORAGE_KEY) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+        localStorage.removeItem(LEGACY_STORAGE_KEY);
+      }
+      return normalized;
+    } catch (error) {
+      console.warn('تعذر قراءة بيانات محلية تالفة.', error);
+    }
+  }
+  return defaultState();
+}
+
+let state = loadState();
+let cloudSyncTimer;
+let summaryController;
+let summaryRequestToken = 0;
+
+function save() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (error) {
+    console.error('تعذر حفظ الملاحظات محليًا.', error);
+  }
+
+  clearTimeout(cloudSyncTimer);
+  cloudSyncTimer = setTimeout(async () => {
+    try {
+      await window.DyothCloudSync?.push?.(state);
+    } catch (error) {
+      console.warn('تعذرت المزامنة السحابية.', error);
+    }
+  }, 500);
+}
+
+function esc(s='') {
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
+
+function fmt(date) {
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return '';
+  return parsed.toLocaleString('ar-SA', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+function activeNote() {
+  return state.notes.find(n => n.id === state.activeNoteId);
+}
+
+function hideSummary() {
+  summaryRequestToken += 1;
+  summaryController?.abort();
+  summaryController = undefined;
+  summarizeBtn.disabled = false;
+  summarizeBtn.textContent = '✨ تلخيص';
+  aiSummary.hidden = true;
+  aiSummary.textContent = '';
+}
+
+function notesForFolder() {
+  let q = searchInput.value.trim().toLowerCase();
+  let list = state.notes.slice();
+  if (state.activeFolderId !== 'all') list = list.filter(n => n.folderId === state.activeFolderId);
+  if (q) {
+    list = list.filter(n =>
+      (n.title || '').toLowerCase().includes(q) ||
+      (n.body || '').toLowerCase().includes(q) ||
+      (n.tags || []).join(' ').toLowerCase().includes(q)
+    );
+  }
+  return list.sort((a,b) => (b.pinned - a.pinned) || new Date(b.updatedAt) - new Date(a.updatedAt));
+}
+
+function renderFolders() {
+  folderList.innerHTML = '';
+  state.folders.forEach(f => {
+    const count = f.id === 'all' ? state.notes.length : state.notes.filter(n => n.folderId === f.id).length;
+    const el = document.createElement('div');
+    el.className = 'folder-item' + (state.activeFolderId === f.id ? ' active' : '');
+    el.setAttribute('role', 'button');
+    el.tabIndex = 0;
+    el.innerHTML = `<span>📁</span><b>${esc(f.name)}</b><span class="folder-count">${count}</span>`;
+    el.onclick = () => { state.activeFolderId = f.id; save(); render(); go('notes'); };
+    el.onkeydown = event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        el.click();
+      }
+    };
+    folderList.appendChild(el);
+  });
+}
+
+function renderNotes() {
+  noteList.innerHTML = '';
+  const list = notesForFolder();
+  if (!list.length) {
+    noteList.innerHTML = '<div class="empty">لا توجد ملاحظات هنا.</div>';
+    return;
+  }
+  list.forEach(n => {
+    const first = (n.body || '').split('\n')[0] || 'لا يوجد نص';
+    const el = document.createElement('div');
+    el.className = 'note-card' + (state.activeNoteId === n.id ? ' active' : '');
+    el.setAttribute('role', 'button');
+    el.tabIndex = 0;
+    el.innerHTML = `
+      ${n.pinned ? '<span class="pin">⭐</span>' : ''}
+      <h3>${esc(n.title || first || 'ملاحظة جديدة')}</h3>
+      <p>${esc(first)}</p>
+      <small>${esc((n.tags || []).map(t=>'#'+t).join(' '))} · ${fmt(n.updatedAt)}</small>
+    `;
+    el.onclick = () => { state.activeNoteId = n.id; hideSummary(); save(); renderEditor(); renderNotes(); go('editor'); };
+    el.onkeydown = event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        el.click();
+      }
+    };
+    noteList.appendChild(el);
+  });
+}
+
+function renderEditor() {
+  const n = activeNote();
+  if (!n) {
+    editorBody.innerHTML = '<div class="empty">حدد ملاحظة أو أنشئ ملاحظة جديدة.</div>';
+    document.getElementById('pinBtn').textContent = '⭐ تثبيت';
+    hideSummary();
+    return;
+  }
+  document.getElementById('pinBtn').textContent = n.pinned ? '⭐ إلغاء التثبيت' : '⭐ تثبيت';
+  editorBody.innerHTML = `
+    <div class="editor-body">
+      <input class="note-title" id="titleInput" placeholder="عنوان الملاحظة" value="${esc(n.title || '')}">
+      <div class="note-meta">
+        <select class="folder-select" id="folderSelect">
+          ${state.folders.filter(f=>f.id!=='all').map(f=>`<option value="${esc(f.id)}" ${f.id===n.folderId?'selected':''}>${esc(f.name)}</option>`).join('')}
+        </select>
+        <input class="tag-input" id="tagInput" placeholder="تصنيفات: عمل، أفكار" value="${esc((n.tags || []).join(', '))}">
+      </div>
+      <textarea class="note-body" id="bodyInput" placeholder="اكتب ملاحظتك هنا...">${esc(n.body || '')}</textarea>
+    </div>
+  `;
+  document.getElementById('titleInput').oninput = e => updateActive({ title: e.target.value });
+  document.getElementById('bodyInput').oninput = e => updateActive({ body: e.target.value });
+  document.getElementById('folderSelect').onchange = e => updateActive({ folderId: e.target.value });
+  document.getElementById('tagInput').oninput = e => updateActive({ tags: e.target.value.split(',').map(x=>x.trim()).filter(Boolean) });
+}
+
+function updateActive(patch) {
+  const n = activeNote();
+  if (!n) return;
+  Object.assign(n, patch, { updatedAt: new Date().toISOString() });
+  if ('title' in patch || 'body' in patch) hideSummary();
+  save();
+  renderFolders();
+  renderNotes();
+}
+
+function newNote() {
+  const folderId = state.activeFolderId === 'all' ? 'default' : state.activeFolderId;
+  const now = new Date().toISOString();
+  const n = { id: makeId('n'), title: '', body: '', folderId, tags: [], pinned: false, createdAt: now, updatedAt: now };
+  state.notes.unshift(n);
+  state.activeNoteId = n.id;
+  hideSummary();
+  save();
+  render();
+  go('editor');
+  setTimeout(()=>document.getElementById('titleInput')?.focus(), 50);
+}
+
+function addFolder() {
+  const input = document.getElementById('newFolderName');
+  const name = input.value.trim();
+  if (!name) return;
+  state.folders.push({ id: makeId('f'), name: name.slice(0, 80) });
+  input.value = '';
+  save();
+  render();
+}
+
+function deleteNote() {
+  const n = activeNote();
+  if (!n || !confirm('هل تريد حذف هذه الملاحظة؟')) return;
+  state.notes = state.notes.filter(x => x.id !== n.id);
+  state.activeNoteId = null;
+  hideSummary();
+  save();
+  render();
+  go('notes');
+}
+
+function togglePin() {
+  const n = activeNote();
+  if (!n) return;
+  n.pinned = !n.pinned;
+  n.updatedAt = new Date().toISOString();
+  save();
+  render();
+}
+
+function download(filename, text, type='text/plain') {
+  const blob = new Blob([text], {type});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 0);
+}
+
+function exportJSON() {
+  download('dyoth-backup.json', JSON.stringify(state, null, 2), 'application/json');
+}
+
+function exportMarkdown() {
+  const exportData = {
+    version: 1,
+    folders: state.folders.filter(folder => !folder.system).map(folder => ({ key: folder.id, name: folder.name })),
+    notes: state.notes.map(n => ({
+      title: n.title,
+      body: n.body,
+      folderKey: n.folderId,
+      folder: state.folders.find(folder => folder.id === n.folderId)?.name || 'ملاحظاتي',
+      tags: n.tags,
+      pinned: n.pinned,
+      createdAt: n.createdAt,
+      updatedAt: n.updatedAt
+    }))
+  };
+  const embeddedData = JSON.stringify(exportData).replace(/</g, '\\u003c');
+  const readableNotes = state.notes.map(n => {
+    const folder = state.folders.find(f=>f.id===n.folderId)?.name || 'بدون مجلد';
+    const title = (n.title || 'ملاحظة بدون عنوان').replace(/[\r\n]+/g, ' ');
+    return `# ${title}\n\n- المجلد: ${folder}\n- مثبتة: ${n.pinned ? 'نعم' : 'لا'}\n- التصنيفات: ${(n.tags || []).join(', ')}\n- آخر تحديث: ${n.updatedAt}\n\n${n.body || ''}\n`;
+  }).join('\n---\n\n');
+  const closingScriptTag = '<' + '/script>';
+  const md = `<!-- Dyoth Markdown Export v1 -->\n<script type="application/json" id="dyoth-export-data">\n${embeddedData}\n${closingScriptTag}\n\n${readableNotes}`;
+  download('dyoth-notes.md', md, 'text/markdown');
+}
+
+async function importJSON(file) {
+  if (!file || file.size > 5_000_000) throw new Error('ملف JSON مفقود أو أكبر من 5MB.');
+  const text = await file.text();
+  const data = JSON.parse(text);
+  if (!Array.isArray(data?.notes) || !Array.isArray(data?.folders)) throw new Error('ملف JSON غير صالح.');
+  state = normalizeState(data);
+  hideSummary();
+  save();
+  render();
+}
+
+async function importMarkdown(file) {
+  if (!file || file.size > 5_000_000) throw new Error('ملف Markdown مفقود أو أكبر من 5MB.');
+  const text = (await file.text()).replace(/^\uFEFF/, '');
+  const now = new Date().toISOString();
+  const embeddedMatch = text.match(/^<!-- Dyoth Markdown Export v1 -->\r?\n<script type="application\/json" id="dyoth-export-data">\r?\n([\s\S]*?)\r?\n<\/script>/);
+  let records;
+  let exportedFolders = [];
+
+  if (embeddedMatch) {
+    const parsed = JSON.parse(embeddedMatch[1]);
+    if (parsed?.version !== 1 || !Array.isArray(parsed.notes)) throw new Error('بيانات Dyoth المضمنة غير صالحة.');
+    records = parsed.notes;
+    exportedFolders = Array.isArray(parsed.folders) ? parsed.folders : [];
+  } else {
+    const normalizedText = text.replace(/\r\n?/g, '\n');
+    const parts = normalizedText.split(/\n{2,}---\n{2,}(?=#\s)/g).filter(part => part.trim());
+    records = parts.map(part => {
+      const title = (part.match(/^#\s+(.+)$/m) || [,'ملاحظة مستوردة'])[1];
+      const metadataMatch = part.match(/<!-- dyoth-meta:([^\s]+) -->/);
+      let metadata = {};
+      if (metadataMatch) {
+        try {
+          metadata = JSON.parse(decodeURIComponent(metadataMatch[1]));
+        } catch {
+          metadata = {};
+        }
+      }
+      const legacyFolder = (part.match(/^- المجلد:\s*(.+)$/m) || [,''])[1].trim();
+      const legacyTags = (part.match(/^- التصنيفات:\s*(.*)$/m) || [,''])[1]
+        .split(',').map(tag => tag.trim()).filter(Boolean);
+      const body = part
+        .replace(/^#\s+.+\n?/, '')
+        .replace(/<!-- dyoth-meta:[^\s]+ -->\n?/m, '')
+        .replace(/^(?:- (?:المجلد|مثبتة|التصنيفات|آخر تحديث):.*\n?){1,4}/m, '')
+        .trim();
+      return {
+        title,
+        body,
+        folder: typeof metadata.folder === 'string' ? metadata.folder : legacyFolder,
+        tags: Array.isArray(metadata.tags) ? metadata.tags : legacyTags,
+        pinned: metadata.pinned === true || /^- مثبتة:\s*نعم$/m.test(part),
+        updatedAt: metadata.updatedAt
+      };
+    });
+  }
+
+  if (records.length > 5000 || records.length + state.notes.length > 5000) {
+    throw new Error('يتجاوز الاستيراد الحد الإجمالي البالغ 5000 ملاحظة.');
+  }
+
+  const folderLimit = 502;
+  const importedFolderIds = new Map([['default', 'default']]);
+  function createExportedFolder(folder) {
+    const key = typeof folder?.key === 'string' ? folder.key : '';
+    const name = typeof folder?.name === 'string' ? folder.name.trim().slice(0, 80) : '';
+    if (!key || !name || importedFolderIds.has(key)) return;
+    if (state.folders.length >= folderLimit) return;
+    const importedFolder = { id: makeId('f'), name, system: false };
+    state.folders.push(importedFolder);
+    importedFolderIds.set(key, importedFolder.id);
+  }
+
+  function resolveFolderId(folderName, folderKey) {
+    if (typeof folderKey === 'string' && importedFolderIds.has(folderKey)) {
+      return importedFolderIds.get(folderKey);
+    }
+    const name = typeof folderName === 'string' ? folderName.trim().slice(0, 80) : '';
+    if (!name) return 'default';
+    const existing = state.folders.find(folder => folder.name === name && folder.id !== 'all');
+    if (existing) return existing.id;
+    if (state.folders.length >= folderLimit) return 'default';
+    const folder = { id: makeId('f'), name, system: false };
+    state.folders.push(folder);
+    return folder.id;
+  }
+
+  exportedFolders.slice(0, 500).forEach(createExportedFolder);
+  const importedNotes = records.flatMap(record => {
+    if (!record || typeof record !== 'object') return [];
+    const tags = Array.isArray(record.tags) ? record.tags : [];
+    return [{
+      id: makeId('md'),
+      title: typeof record.title === 'string' ? record.title.slice(0, 500) : 'ملاحظة مستوردة',
+      body: typeof record.body === 'string' ? record.body.slice(0, 200000) : '',
+      folderId: resolveFolderId(record.folder, record.folderKey),
+      tags: tags.filter(tag => typeof tag === 'string').map(tag => tag.slice(0, 40)).slice(0, 30),
+      pinned: record.pinned === true,
+      createdAt: validDate(record.createdAt, now),
+      updatedAt: validDate(record.updatedAt, now)
+    }];
+  });
+
+  state.notes = [...importedNotes, ...state.notes];
+  state = normalizeState(state);
+  hideSummary();
+  save();
+  render();
+}
+
+async function summarizeNote() {
+  const note = activeNote();
+  const text = note?.body?.trim();
+  if (!text) {
+    alert('اكتب نصًا في الملاحظة قبل طلب التلخيص.');
+    return;
+  }
+  if (text.length > MAX_SUMMARY_CHARS) {
+    alert(`الحد الأقصى للتلخيص ${MAX_SUMMARY_CHARS.toLocaleString('ar-SA')} حرفًا.`);
+    return;
+  }
+
+  summaryController?.abort();
+  const controller = new AbortController();
+  summaryController = controller;
+  const requestToken = ++summaryRequestToken;
+  const requestedNoteId = note.id;
+  const requestedText = text;
+
+  summarizeBtn.disabled = true;
+  summarizeBtn.textContent = '⏳ جارٍ التلخيص';
+  aiSummary.hidden = false;
+  aiSummary.textContent = 'جارٍ إعداد الملخص الآمن...';
+
+  try {
+    const response = await fetch('/api/summarize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+      signal: controller.signal
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || typeof payload.summary !== 'string') {
+      throw new Error(payload.error || 'تعذر تلخيص الملاحظة.');
+    }
+
+    const currentNote = activeNote();
+    if (requestToken !== summaryRequestToken || currentNote?.id !== requestedNoteId || currentNote.body.trim() !== requestedText) return;
+    const heading = document.createElement('strong');
+    heading.textContent = 'ملخص بالذكاء الاصطناعي';
+    aiSummary.replaceChildren(heading, document.createTextNode(payload.summary));
+  } catch (error) {
+    if (error?.name === 'AbortError' || requestToken !== summaryRequestToken) return;
+    aiSummary.textContent = error.message || 'تعذر تلخيص الملاحظة.';
+  } finally {
+    if (requestToken === summaryRequestToken) {
+      summaryController = undefined;
+      summarizeBtn.disabled = false;
+      summarizeBtn.textContent = '✨ تلخيص';
+    }
+  }
+}
+
+function go(view) {
+  app.dataset.mobileView = view;
+}
+
+function render() {
+  document.body.classList.toggle('dark', state.dark);
+  renderFolders();
+  renderNotes();
+  renderEditor();
+}
+
+document.getElementById('newNoteBtn').onclick = newNote;
+document.getElementById('addFolderBtn').onclick = addFolder;
+document.getElementById('deleteBtn').onclick = deleteNote;
+document.getElementById('pinBtn').onclick = togglePin;
+summarizeBtn.onclick = summarizeNote;
+document.getElementById('exportJsonBtn').onclick = exportJSON;
+document.getElementById('exportMdBtn').onclick = exportMarkdown;
+document.getElementById('themeBtn').onclick = () => { state.dark = !state.dark; save(); render(); };
+searchInput.oninput = renderNotes;
+document.querySelectorAll('[data-go]').forEach(btn => btn.onclick = () => go(btn.dataset.go));
+document.getElementById('importJsonInput').onchange = e => importJSON(e.target.files[0]).catch(err => alert(err.message));
+document.getElementById('importMdInput').onchange = e => importMarkdown(e.target.files[0]).catch(err => alert(err.message));
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(error => {
+      console.warn('تعذر تسجيل Service Worker.', error);
+    });
+  });
+}
+
+render();
+</script>
+</body>
+</html>
