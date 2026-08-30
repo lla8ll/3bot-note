@@ -1,13 +1,45 @@
-# Dyoth
+# 3bot Note
 
-تطبيق ملاحظات عربي تقدمي (PWA) يعمل محليًا ويدعم تلخيص الملاحظات عبر OpenAI API من خلال خادم آمن. لا يصل مفتاح OpenAI إلى المتصفح.
+تطبيق ملاحظات عربي تقدمي (PWA) باسم 3bot Note يعمل محليًا ويدعم تلخيص الملاحظات عبر OpenAI API من خلال خادم آمن. لا يصل مفتاح OpenAI إلى المتصفح.
+
+## الميزات
+
+- إدارة كاملة للمجلدات: إضافة، إعادة تسمية، حذف.
+- سلة محذوفات مع تراجع فوري وحذف تلقائي بعد 30 يوم.
+- بحث متقدم: فلترة بالمجلد، بالتصنيف، والمثبتة فقط.
+- تذكير بالنسخة الاحتياطية كل 7 أيام.
+- إشعارات Toast مع زر تراجع بدلاً من `alert/confirm/prompt` الأصلية.
+- تلخيص آمن بالذكاء الاصطناعي عبر خادم Vercel.
+- يعمل بدون اتصال بفضل Service Worker.
+
+## البنية
+
+```
+index.html                  ← هيكل HTML فقط
+styles/main.css             ← كل الأنماط
+src/client/
+  app.js                    ← نقطة الدخول ووصل الأحداث
+  state.js                  ← الحالة والتخزين والسلة
+  actions.js                ← عمليات المجلدات والملاحظات
+  render.js                 ← دوال العرض
+  search.js                 ← الفلترة والبحث
+  io.js                     ← استيراد/تصدير JSON و Markdown
+  summarize.js              ← تلخيص AI
+  toast.js                  ← إشعارات
+  modal.js                  ← نوافذ حوار مخصصة
+  backup.js                 ← تذكير النسخ الاحتياطي
+api/summarize.js            ← دالة Vercel Serverless
+src/summarize-handler.mjs   ← منطق التلخيص
+service-worker.js           ← تخزين مؤقت للعمل بدون اتصال
+cloud-sync.js               ← واجهة مزامنة سحابية (غير مفعّلة)
+```
 
 ## التقنية
 
-- HTML وCSS وJavaScript خام للواجهة.
+- HTML وCSS وJavaScript خام. لا Framework، لا خطوة build.
+- ES Modules (`<script type="module">`) لتنظيم الكود.
 - Service Worker وWeb App Manifest لدعم PWA والعمل دون اتصال.
 - خادم Node.js محلي، مع دالة Serverless متوافقة مع Vercel داخل `api/`.
-- لا توجد تبعيات تشغيل خارجية؛ يستخدم الخادم واجهة OpenAI Responses API عبر `fetch`.
 
 ## التشغيل محليًا
 
@@ -36,7 +68,6 @@ pnpm test
 - يقرأ الخادم `OPENAI_API_KEY` من متغير البيئة، ويستخدم `gpt-5-mini` افتراضيًا عبر `OPENAI_MODEL`.
 - المدخلات محدودة الحجم، والاستجابة غير مخزنة (`store: false`)، وهناك تحقق same-origin وحدّ طلبات مبدئي لكل عميل.
 - حد الطلبات داخل الذاكرة حماية أولية فقط؛ قبل الإطلاق العام يجب تفعيل rate limiting ومصادقة أو حماية إساءة استخدام على منصة الاستضافة.
-- عند Vercel اضبط `APP_ORIGIN=https://dyoth.net` وأضف `OPENAI_API_KEY` إلى بيئة Production فقط. لا تستخدم مفتاح الإنتاج في Preview deployments.
 
 ## المزامنة السحابية
 
@@ -44,4 +75,4 @@ pnpm test
 
 ## النشر
 
-نقطة الدخول هي `index.html`، والنطاق الافتراضي للمشروع هو `dyoth.net`. المشروع يتضمن دالة Vercel اختيارية و`vercel.json` لرؤوس الأمان، لكن اختيار منصة النشر وربط DNS و`www` يجب تأكيده قبل تنفيذ أي تغيير خارجي. قبل الإطلاق العام، فعّل حد طلبات موزعًا أو WAF على `/api/summarize` لأن فحص Origin وحده ليس مصادقة.
+نقطة الدخول هي `index.html`. المشروع يتضمن دالة Vercel و`vercel.json` لرؤوس الأمان. قبل الإطلاق العام، فعّل حد طلبات موزعًا أو WAF على `/api/summarize`.

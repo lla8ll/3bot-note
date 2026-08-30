@@ -23,7 +23,18 @@ const STATIC_FILES = new Set([
   '/manifest.json',
   '/cloud-sync.js',
   '/service-worker.js',
-  '/apple-touch-icon.png'
+  '/apple-touch-icon.png',
+  '/styles/main.css',
+  '/src/client/app.js',
+  '/src/client/state.js',
+  '/src/client/actions.js',
+  '/src/client/render.js',
+  '/src/client/search.js',
+  '/src/client/io.js',
+  '/src/client/summarize.js',
+  '/src/client/toast.js',
+  '/src/client/modal.js',
+  '/src/client/backup.js'
 ]);
 
 function applySecurityHeaders(response) {
@@ -176,5 +187,5 @@ export const server = createServer(async (request, response) => {
 
 const port = Number.parseInt(process.env.PORT || '3000', 10);
 server.listen(Number.isFinite(port) ? port : 3000, '0.0.0.0', () => {
-  console.log(`Dyoth is running on http://localhost:${Number.isFinite(port) ? port : 3000}`);
+  console.log(`3bot Note is running on http://localhost:${Number.isFinite(port) ? port : 3000}`);
 });

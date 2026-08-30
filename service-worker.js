@@ -1,9 +1,20 @@
-const CACHE_PREFIX = 'dyoth-pwa-';
-const CACHE_NAME = `${CACHE_PREFIX}v4`;
+const CACHE_PREFIX = '3bot-note-pwa-';
+const CACHE_NAME = `${CACHE_PREFIX}v5`;
 const APP_SHELL = [
   './index.html',
   './manifest.json',
   './cloud-sync.js',
+  './styles/main.css',
+  './src/client/app.js',
+  './src/client/state.js',
+  './src/client/actions.js',
+  './src/client/render.js',
+  './src/client/search.js',
+  './src/client/io.js',
+  './src/client/summarize.js',
+  './src/client/toast.js',
+  './src/client/modal.js',
+  './src/client/backup.js',
   './apple-touch-icon.png',
   './icons/icon-72.png',
   './icons/icon-96.png',

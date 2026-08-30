@@ -8,7 +8,7 @@
   استخدم فقط مفاتيح public/anon المسموح بها للمتصفح.
 */
 
-window.DyothCloudSync = {
+window.BotNoteCloudSync = {
   enabled: false,
 
   async push(_state) {
@@ -38,13 +38,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-window.DyothCloudSync = {
+window.BotNoteCloudSync = {
   enabled: true,
   async push(state) {
-    await setDoc(doc(db, "dyoth", CURRENT_AUTHENTICATED_USER_ID), { state, updatedAt: Date.now() });
+    await setDoc(doc(db, "3bot-note", CURRENT_AUTHENTICATED_USER_ID), { state, updatedAt: Date.now() });
   },
   async pull() {
-    const snap = await getDoc(doc(db, "dyoth", CURRENT_AUTHENTICATED_USER_ID));
+    const snap = await getDoc(doc(db, "3bot-note", CURRENT_AUTHENTICATED_USER_ID));
     return snap.exists() ? snap.data().state : null;
   }
 };
@@ -57,13 +57,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const supabase = createClient("YOUR_SUPABASE_URL", "YOUR_SUPABASE_ANON_KEY");
 
-window.DyothCloudSync = {
+window.BotNoteCloudSync = {
   enabled: true,
   async push(state) {
-    await supabase.from("dyoth").upsert({ id: CURRENT_AUTHENTICATED_USER_ID, state, updated_at: new Date().toISOString() });
+    await supabase.from("3bot-note").upsert({ id: CURRENT_AUTHENTICATED_USER_ID, state, updated_at: new Date().toISOString() });
   },
   async pull() {
-    const { data } = await supabase.from("dyoth").select("state").eq("id", CURRENT_AUTHENTICATED_USER_ID).single();
+    const { data } = await supabase.from("3bot-note").select("state").eq("id", CURRENT_AUTHENTICATED_USER_ID).single();
     return data?.state || null;
   }
 };
