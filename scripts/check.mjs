@@ -6,7 +6,7 @@ import { Script } from 'node:vm';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const errors = [];
-const oldBrandPattern = new RegExp(['Dyoth', 'AI'].join('[ _-]?'), 'i');
+const oldBrandPattern = new RegExp(['dy', 'oth'].join(''), 'i');
 const secretPatterns = [
   new RegExp(['sk', '(?:proj-)?[A-Za-z0-9_-]{20,}'].join('-')),
   /gh[pousr]_[A-Za-z0-9]{20,}/,
@@ -79,8 +79,8 @@ if (vercelConfig) {
 }
 
 if (manifest) {
-  if (manifest.name !== 'Dyoth' || manifest.short_name !== 'Dyoth') {
-    fail('اسم PWA في manifest يجب أن يكون Dyoth.');
+  if (manifest.name !== '3bot Note' || manifest.short_name !== '3bot Note') {
+    fail('اسم PWA في manifest يجب أن يكون 3bot Note.');
   }
   if (manifest.start_url !== './' || manifest.scope !== './') {
     fail('start_url وscope يجب أن يشيرا إلى جذر التطبيق.');
@@ -100,7 +100,29 @@ if (manifest) {
   }
 }
 
-for (const file of ['service-worker.js', 'cloud-sync.js', 'local-server.mjs', 'api/summarize.js', 'src/summarize-handler.mjs']) {
+const clientModules = [
+  'src/client/app.js',
+  'src/client/state.js',
+  'src/client/actions.js',
+  'src/client/render.js',
+  'src/client/search.js',
+  'src/client/io.js',
+  'src/client/summarize.js',
+  'src/client/toast.js',
+  'src/client/modal.js',
+  'src/client/backup.js'
+];
+
+const jsFilesToCheck = [
+  'service-worker.js',
+  'cloud-sync.js',
+  'local-server.mjs',
+  'api/summarize.js',
+  'src/summarize-handler.mjs',
+  ...clientModules
+];
+
+for (const file of jsFilesToCheck) {
   const result = spawnSync(process.execPath, ['--check', join(ROOT, file)], { encoding: 'utf8' });
   if (result.status !== 0) fail(`${file} يحتوي خطأ JavaScript: ${(result.stderr || '').trim()}`);
 }
@@ -115,12 +137,31 @@ for (const match of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi))
   }
 }
 
-if (!html.includes("fetch('/api/summarize'")) fail('واجهة التلخيص لا تستدعي endpoint الخادمي المتوقع.');
-if (html.includes('OPENAI_API_KEY')) fail('يجب ألا يظهر OPENAI_API_KEY في الواجهة.');
+// نتحقق من استدعاء نقطة نهاية التلخيص في ملفات العميل
+const summarizeSource = await readFile(join(ROOT, 'src/client/summarize.js'), 'utf8');
+if (!summarizeSource.includes("fetch('/api/summarize'")) {
+  fail('واجهة التلخيص لا تستدعي endpoint الخادمي المتوقع.');
+}
+
+// نتحقق من عدم تسرب مفتاح OpenAI في أي ملف واجهة
+for (const clientFile of ['index.html', ...clientModules]) {
+  const content = await readFile(join(ROOT, clientFile), 'utf8');
+  if (content.includes('OPENAI_API_KEY')) {
+    fail(`يجب ألا يظهر OPENAI_API_KEY في ملفات الواجهة (${clientFile}).`);
+  }
+}
+
+// نتحقق أن index.html يستورد ملفات الوحدات
+if (!html.includes('src/client/app.js')) {
+  fail('index.html يجب أن يستورد src/client/app.js.');
+}
+if (!html.includes('styles/main.css')) {
+  fail('index.html يجب أن يربط styles/main.css.');
+}
 
 const serviceWorker = await readFile(join(ROOT, 'service-worker.js'), 'utf8');
 if (!serviceWorker.includes("url.pathname.startsWith('/api/')")) fail('Service Worker يجب أن يستثني /api/.');
-for (const path of ['./index.html', './manifest.json', './cloud-sync.js']) {
+for (const path of ['./index.html', './manifest.json', './cloud-sync.js', './styles/main.css', './src/client/app.js']) {
   if (!serviceWorker.includes(path)) fail(`Service Worker لا يسبق تخزين ${path}.`);
 }
 
@@ -147,5 +188,5 @@ if (errors.length) {
   for (const error of errors) console.error(`- ${error}`);
   process.exitCode = 1;
 } else {
-  console.log('Dyoth checks passed.');
+  console.log('3bot Note checks passed.');
 }
