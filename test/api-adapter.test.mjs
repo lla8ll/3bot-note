@@ -8,7 +8,7 @@ const originalEnv = {
 };
 
 before(() => {
-  process.env.APP_ORIGIN = 'https://dyoth.net';
+  process.env.APP_ORIGIN = 'https://3bot-note.net';
   delete process.env.OPENAI_API_KEY;
 });
 
@@ -24,7 +24,7 @@ async function callApi({ body, headers = {}, method = 'POST' }) {
   let responseBody = Buffer.alloc(0);
   const request = {
     body,
-    headers: { host: 'dyoth.net', ...headers },
+    headers: { host: '3bot-note.net', ...headers },
     method,
     url: '/api/summarize',
     socket: { remoteAddress: '127.0.0.1' }
@@ -49,7 +49,7 @@ async function callApi({ body, headers = {}, method = 'POST' }) {
 
 const validHeaders = {
   'content-type': 'application/json',
-  origin: 'https://dyoth.net',
+  origin: 'https://3bot-note.net',
   'x-forwarded-proto': 'https'
 };
 
